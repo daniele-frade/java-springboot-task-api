@@ -1,0 +1,4 @@
+com/example/taskapi/Task.class
+com/example/taskapi/TaskApiApplication.class
+com/example/taskapi/TaskRepository.class
+com/example/taskapi/TaskController.class

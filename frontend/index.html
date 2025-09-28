@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Task API Frontend</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 2rem; }
+    input, button { margin: 0.5rem 0; }
+    ul { list-style: none; padding: 0; }
+    li { margin: 0.5rem 0; }
+    .done { text-decoration: line-through; color: #888; }
+  </style>
+</head>
+<body>
+  <h1>Minhas Tarefas</h1>
+  <form id="taskForm">
+    <input type="text" id="title" placeholder="Título da tarefa" required />
+    <button type="submit">Adicionar</button>
+  </form>
+  <div id="feedback" style="color: red; margin: 1rem 0;"></div>
+  <ul id="taskList"></ul>
+  <script>
+  const apiUrl = 'http://localhost:8081/api/tasks';
+    const taskList = document.getElementById('taskList');
+    const form = document.getElementById('taskForm');
+    const titleInput = document.getElementById('title');
+    const feedback = document.getElementById('feedback');
+
+    function renderTasks(tasks) {
+      taskList.innerHTML = '';
+      if (!tasks.length) {
+        const li = document.createElement('li');
+        li.textContent = 'Nenhuma tarefa cadastrada.';
+        li.style.color = '#888';
+        taskList.appendChild(li);
+        return;
+      }
+      tasks.forEach(task => {
+        const li = document.createElement('li');
+        li.textContent = task.title + (task.completed ? ' (concluída)' : '');
+        if (task.completed) li.classList.add('done');
+        taskList.appendChild(li);
+      });
+    }
+
+    function fetchTasks() {
+      feedback.textContent = '';
+      fetch(apiUrl)
+        .then(res => {
+          if (!res.ok) throw new Error('Erro ao buscar tarefas');
+          return res.json();
+        })
+        .then(renderTasks)
+        .catch(() => {
+          feedback.textContent = 'Não foi possível conectar à API. Verifique se o backend está rodando.';
+          taskList.innerHTML = '';
+        });
+    }
+
+    form.onsubmit = function(e) {
+      e.preventDefault();
+      feedback.textContent = '';
+      const title = titleInput.value.trim();
+      if (!title) {
+        feedback.textContent = 'Digite um título para a tarefa.';
+        return;
+      }
+      fetch(apiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title: title, completed: false })
+      })
+      .then(res => {
+        if (!res.ok) throw new Error('Erro ao adicionar tarefa');
+        fetchTasks();
+        titleInput.value = '';
+      })
+      .catch(() => {
+        feedback.textContent = 'Erro ao adicionar tarefa. Verifique a API.';
+      });
+    };
+
+    fetchTasks();
+  </script>
+</body>
+</html>
